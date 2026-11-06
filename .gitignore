@@ -1,0 +1,26 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# Data & artifacts (reproducible from code)
+data/**
+!data/**/
+!data/**/.gitkeep
+models/*
+!models/.gitkeep
+
+# Secrets
+.env
+
+# Notebooks / tooling
+.ipynb_checkpoints/
+.ruff_cache/
+.pytest_cache/
+.DS_Store

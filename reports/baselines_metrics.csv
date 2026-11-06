@@ -1,0 +1,9 @@
+period,model,MAE,RMSE,MAPE_%,n
+test_2019,naive_day,4557.69,6943.99,8.33,8760
+test_2019,snaive_week,2558.15,4464.97,4.74,8760
+test_2019,weekday_mean_4w,2754.17,4331.24,5.09,8760
+test_2019,tso_dayahead,1989.25,2489.4,3.52,8760
+stress_2020,naive_day,4049.46,6161.74,7.77,6576
+stress_2020,snaive_week,2226.51,3777.58,4.3,6576
+stress_2020,weekday_mean_4w,2507.64,3855.89,4.75,6576
+stress_2020,tso_dayahead,1458.9,1891.88,2.81,6576
