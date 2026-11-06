@@ -9,17 +9,20 @@ dependencies = [
     "lightgbm>=4.7.0",
     "matplotlib>=3.11.2",
     "numpy>=2.5.4",
+    "optuna>=5.0.0",
     "pandas>=3.1.1",
     "plotly>=7.1.0",
     "pyarrow>=26.0.1",
     "requests>=2.34.2",
     "scikit-learn>=1.9.1",
     "seaborn>=0.13.2",
+    "shap>=0.54.1",
     "statsmodels>=0.15.0",
 ]
 
 [project.scripts]
 fetch-data = "energy_demand_forecasting.data:main"
+run-backtest = "energy_demand_forecasting.pipeline:main"
 
 [build-system]
 requires = ["uv_build>=0.13.7,<0.14.0"]
