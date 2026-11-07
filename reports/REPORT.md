@@ -101,6 +101,9 @@ from bad forecasting.
 2. Our main model predicts load **relative to its recent 28-day level**, so slow level shifts
    (whatever their cause) don't turn into systematic error.
 
+![Left: ENTSO-E load as a share of official consumption. Right: monthly bias of the TSO forecast](figures/10_data_check.png)
+*Left: ENTSO-E load as a share of official consumption. Right: monthly bias of the TSO forecast.*
+
 ## 3. What the exploratory analysis showed
 
 (Notebook `01_eda.ipynb`; figures `reports/figures/01–08`.)
@@ -118,6 +121,18 @@ from bad forecasting.
 - **COVID-19 was a large shock.** Weekly demand fell by up to **14.4 %** (week ending
   2020-04-12) against the 2017–19 average; −9 % in Apr–May, still −4.6 % in Jul–Sep.
 - **Slow decline after 2018**, partly from rooftop solar used on site.
+
+![Average hourly demand profile by weekday (non-holiday days)](figures/02_daily_weekly_profile.png)
+*Average hourly demand profile by weekday (non-holiday days).*
+
+![Working-day demand vs temperature (heating curve) and solar radiation](figures/04_weather_dependence.png)
+*Working-day demand vs temperature (heating curve) and solar radiation.*
+
+![Christmas dip by year, and weekday demand drop by holiday population share](figures/05_holidays.png)
+*Christmas dip by year, and weekday demand drop by holiday population share.*
+
+![2020 weekly demand vs the 2017–19 average for the same week](figures/07_covid_2020.png)
+*2020 weekly demand vs the 2017–19 average for the same week.*
 
 ## 4. Method
 
@@ -192,6 +207,10 @@ the normalised one is better after the COVID level shift (1.06 vs 1.12 GW in 202
 them is the best or tied-best in both periods.
 
 ![Example forecasts](figures/14_example_forecasts.png)
+*Example forecasts: a normal week, Ascension with a bridge day, Christmas, and the start of the COVID lockdown. Shaded: calibrated 80 % interval.*
+
+![MAE by model and test period (lower is better)](figures/11_headline_mae.png)
+*MAE by model and test period (lower is better).*
 
 ### 5.2 Value of weather information
 
@@ -204,6 +223,9 @@ them is the best or tied-best in both periods.
 Weather improves on the calendar-and-lags model by about 11 % (2019) under realistic forecast
 errors. Simulated forecast errors cost 0.04–0.06 GW compared with perfect weather. So our
 headline isn't inflated by perfect weather: even the no-weather model beats both TSO benchmarks.
+
+![Ensemble MAE without weather, with realistic (noisy) weather and with perfect weather](figures/12_weather_variants.png)
+*Ensemble MAE without weather, with realistic (noisy) weather and with perfect weather.*
 
 ### 5.3 Statistical significance
 
@@ -239,6 +261,7 @@ difference = ensemble better.
   in April (Easter) and in December/January (`13_error_breakdown.png`).
 
 ![Error breakdown](figures/13_error_breakdown.png)
+*Ensemble vs TSO error by hour, day type and month (2019).*
 
 ### 5.5 The COVID-19 shock
 
@@ -256,6 +279,7 @@ recent lags reflect the new demand, its relative daily and weekly shape is still
 (`15_covid_adaptation.png`). This is exactly why we predict relative to the recent level.
 
 ![COVID adaptation](figures/15_covid_adaptation.png)
+*7-day rolling MAE through 2020; shaded: first lockdown.*
 
 ### 5.6 Prediction intervals
 
@@ -273,6 +297,9 @@ COVID. The simple variant (empirical error quantiles around the point ensemble) 
 of the two calibrated methods, has the lower pinball loss, and doesn't need the quantile models
 at all. Coverage is about 72–76 % in the afternoon and 80–85 % at night
 (`16_interval_coverage.png`), so calibrating per hour would be a cheap refinement.
+
+![Coverage of the 80 % interval by hour: raw quantile models vs conformal calibration](figures/16_interval_coverage.png)
+*Coverage of the 80 % interval by hour: raw quantile models vs conformal calibration.*
 
 ### 5.7 What drives the model (SHAP)
 
@@ -302,6 +329,10 @@ Mean |SHAP| of the normalised LightGBM, 2019 sample, as % of the 28-day level:
   holiday it lowers the forecast by 4–13 % of level, scaling with the population share off.
 
 ![SHAP summary](figures/17_shap_summary.png)
+*SHAP summary of the normalised LightGBM (2019 sample).*
+
+![SHAP dependence for temperature, holiday share and solar radiation](figures/18_shap_dependence.png)
+*SHAP dependence for temperature, holiday share and solar radiation.*
 
 ## 6. Implementation
 

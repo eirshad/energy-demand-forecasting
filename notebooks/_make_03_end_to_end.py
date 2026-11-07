@@ -134,6 +134,7 @@ display(wv.round(3))
 fig, ax = plt.subplots(figsize=(7, 3.5))
 wv.plot.bar(ax=ax, rot=0)
 ax.set(title="Ensemble MAE by weather information", ylabel="GW", xlabel="")
+ax.legend(title="period", loc="upper left", bbox_to_anchor=(1.0, 1.0))
 save(fig, "12_weather_variants")"""),
     md("""## 6. Are the differences statistically significant?
 

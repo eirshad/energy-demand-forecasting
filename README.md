@@ -6,7 +6,7 @@ baselines, the official forecast, Ridge and LightGBM models in a monthly rolling
 backtest, with realistic weather-forecast noise, significance tests, prediction intervals and
 SHAP explanations.
 
-**→ Full write-up: [`reports/REPORT.md`](reports/REPORT.md)** · End-to-end notebook:
+**→ Full write-up: [`reports/REPORT.md`](reports/REPORT.md) ([PDF](reports/REPORT.pdf))** · End-to-end notebook:
 [`notebooks/03_end_to_end.ipynb`](notebooks/03_end_to_end.ipynb)
 
 ## Results at a glance (day-ahead MAE, GW)
