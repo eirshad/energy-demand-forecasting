@@ -129,3 +129,32 @@ def test_dm_and_interval_metrics():
     iv = interval_metrics(y, y - 1, y + 1)
     assert iv["coverage_%"] == 100 and iv["mean_width_MW"] == 2
     assert pinball_loss(y, y, 0.9) == 0
+
+
+def test_conformal_intervals_reach_target_coverage_and_use_only_past_errors():
+    from energy_demand_forecasting.evaluation import (
+        conformal_from_point,
+        conformalize_quantiles,
+    )
+
+    idx = pd.date_range("2019-01-01", periods=24 * 200, freq="h", tz="UTC")
+    rng = np.random.default_rng(7)
+    y = pd.Series(rng.normal(0, 1000, len(idx)), index=idx)
+    point = pd.Series(0.0, index=idx)
+    lo, hi = conformal_from_point(y, point)
+    late = slice(idx[24 * 60], None)
+    cov = interval_metrics(y.loc[late], lo.loc[late], hi.loc[late])["coverage_%"]
+    assert 76 < cov < 84
+    # over-confident quantiles get widened to ~80 % coverage
+    clo, chi = conformalize_quantiles(y, point - 100, point + 100)
+    assert (
+        76
+        < interval_metrics(y.loc[late], clo.loc[late], chi.loc[late])["coverage_%"]
+        < 84
+    )
+    # no look-ahead: changing future actuals must not change today's interval
+    y2 = y.copy()
+    t = idx[24 * 100]
+    y2.loc[t - pd.Timedelta(hours=47) :] += 10_000
+    lo2, _ = conformal_from_point(y2, point)
+    assert lo.loc[:t].equals(lo2.loc[:t])

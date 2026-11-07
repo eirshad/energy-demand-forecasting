@@ -161,8 +161,15 @@ bias_by_year"""),
 
 Summarised in the project README / chat; the key numbers are printed in the cells above."""),
 ]
-nb = nbf.v4.new_notebook(cells=cells, metadata={
-    "kernelspec": {"name": "energy-demand-forecasting", "display_name": "Python (energy-demand-forecasting)", "language": "python"}
-})
+nb = nbf.v4.new_notebook(
+    cells=cells,
+    metadata={
+        "kernelspec": {
+            "name": "energy-demand-forecasting",
+            "display_name": "Python (energy-demand-forecasting)",
+            "language": "python",
+        }
+    },
+)
 nbf.write(nb, "notebooks/01_eda.ipynb")
 print("wrote notebooks/01_eda.ipynb")

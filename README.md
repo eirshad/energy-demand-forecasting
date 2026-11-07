@@ -9,11 +9,24 @@ SHAP explanations.
 **→ Full write-up: [`reports/REPORT.md`](reports/REPORT.md)** · End-to-end notebook:
 [`notebooks/03_end_to_end.ipynb`](notebooks/03_end_to_end.ipynb)
 
+## Results at a glance (day-ahead MAE, GW)
+
+| | 2019 | Jan–Sep 2020 |
+|---|---|---|
+| Official TSO forecast | 1.99 | 1.46 |
+| TSO forecast, bias-corrected | 1.55 | 1.30 |
+| **LightGBM ensemble (realistic weather)** | **1.00** | **1.06** |
+
+Half the official forecast's error in 2019, all differences significant (Diebold-Mariano
+p < 0.001); calibrated 80 % intervals with 79–81 % coverage. Details, caveats and next steps in the
+report.
+
 ## Reproduce
 ```bash
 uv sync                      # Python 3.12 environment from uv.lock
 uv run fetch-data            # download OPSD + Open-Meteo (~140 MB) and build data/interim/
-uv run run-backtest          # backtest with cached tuned params (~35 min); add --tune to re-tune (~+25 min)
+uv run run-backtest          # 11 backtests with cached tuned params (~2.2 h on a laptop); --tune re-tunes (hours)
+uv run run-backtest --metrics-only  # recompute intervals + metrics from saved predictions (seconds)
 uv run pytest                # tests (leakage, backtest windows, metrics, holidays, DST)
 uv run jupyter lab           # notebooks/01_eda, 02_baselines, 03_end_to_end
 ```

@@ -1,7 +1,7 @@
 """Generates notebooks/03_end_to_end.ipynb. Run from the project root:
 
-    uv run python notebooks/_make_03_end_to_end.py
-    uv run jupyter nbconvert --to notebook --execute --inplace notebooks/03_end_to_end.ipynb
+uv run python notebooks/_make_03_end_to_end.py
+uv run jupyter nbconvert --to notebook --execute --inplace notebooks/03_end_to_end.ipynb
 """
 
 import nbformat as nbf
@@ -175,7 +175,7 @@ daily_err.sort_values("ensemble (noisy wx)", ascending=False).head(8).round(2)""
 fig, axes = plt.subplots(len(windows), 1, figsize=(14, 13))
 for ax, (title, (a, b)) in zip(axes, windows.items()):
     w = preds.loc[a:f"{b} 23:00"] / 1000
-    ax.fill_between(w.index, w.q10__noisy, w.q90__noisy, color="tab:blue", alpha=0.15, label="80% interval")
+    ax.fill_between(w.index, w.q_cp_lo__noisy, w.q_cp_hi__noisy, color="tab:blue", alpha=0.15, label="80% interval (conformal)")
     ax.plot(w.actual, color="k", lw=1.6, label="actual")
     ax.plot(w.ensemble__noisy, color="tab:blue", lw=1.2, label="ensemble (noisy wx)")
     ax.plot(w.tso, color="tab:orange", lw=1, alpha=0.9, label="TSO")
@@ -196,17 +196,24 @@ ax.set(title="7-day rolling MAE in 2020 (shaded: first lockdown)", ylabel="GW", 
 save(fig, "15_covid_adaptation")
 lock = slice("2020-03-16", "2020-05-31")
 (P20.loc[lock, list(c)].sub(P20.loc[lock, "actual"], axis=0).abs().mean() / 1000).rename(index=c).round(3).to_frame("MAE lockdown (GW)")"""),
-    md("## 10. Uncertainty: 80 % prediction intervals"),
+    md("""## 10. Uncertainty: 80 % prediction intervals
+
+Three methods: raw quantile LightGBM (q10/q90), **CQR** (quantiles widened by recent conformity scores) and
+**conformal around the ensemble** (rolling empirical error quantiles). Calibration uses only errors known
+at issue time (lagged 48 h, 56-day window), so the first week of 2019 has no interval."""),
     code("""iv = pd.read_csv(RES / "intervals.csv")
 iv["mean_width_GW"] = (iv["mean_width_MW"] / 1000).round(2)
-display(iv.drop(columns="mean_width_MW"))
+display(iv.drop(columns="mean_width_MW").pivot_table(index=["period", "weather"], columns="method", values=["coverage_%", "mean_width_GW"]))
 yy = P.actual
-lo, hi = P.q10__noisy, P.q90__noisy
-cov_hour = ((yy >= lo) & (yy <= hi)).groupby(cal.hour).mean() * 100
+lo, hi = P.q_cp_lo__noisy, P.q_cp_hi__noisy
+ok = lo.notna()
+cov_hour = ((yy >= lo) & (yy <= hi))[ok].groupby(cal.hour[ok]).mean() * 100
+raw_cov = ((yy >= P.q10__noisy) & (yy <= P.q90__noisy)).groupby(cal.hour).mean() * 100
 fig, ax = plt.subplots(figsize=(10, 3.5))
-cov_hour.plot.bar(ax=ax, color="tab:green")
+pd.DataFrame({"raw quantile LightGBM": raw_cov, "conformal (ensemble)": cov_hour}).plot.bar(ax=ax, color=["tab:gray", "tab:green"])
 ax.axhline(80, color="k", ls="--", lw=1)
 ax.set(title="Empirical coverage of the 80% interval by hour (2019, noisy weather)", ylabel="%", xlabel="hour")
+ax.legend(loc="lower right")
 save(fig, "16_interval_coverage")"""),
     md("""## 11. What drives the model? (SHAP)
 
@@ -236,14 +243,27 @@ for ax, f in zip(axes, ["w_temperature_2m", "holiday_share", "w_shortwave_radiat
 save(fig, "18_shap_dependence")"""),
     md("""## 12. Conclusions
 
-See `reports/REPORT.md` for the full write-up. In short: a leakage-safe LightGBM ensemble,
-issued at the same time as the TSO forecast and evaluated with realistic weather-forecast noise,
-is substantially and significantly more accurate than the official day-ahead forecast and its
-bias-corrected version in both 2019 and the COVID-affected 2020 — with the caveats that our
-weather errors are simulated and the target series has known coverage drift."""),
+* **Accuracy.** With realistic (noisy) weather, the LightGBM ensemble's MAE is **1.00 GW (1.84 %) in 2019**
+  vs **1.99 GW** for the official TSO forecast and **1.55 GW** for the bias-corrected TSO forecast; in
+  Jan–Sep 2020: **1.06 GW** vs 1.46 / 1.30 GW. All differences are significant (Diebold-Mariano p < 0.001).
+* **Even without any weather data** the ensemble (1.13 GW) beats the bias-corrected TSO forecast — most of
+  the edge comes from calendar/holiday modelling and level normalisation; weather adds ~11 % on top,
+  and simulated weather-forecast error gives back about a quarter of that.
+* **Peak-hour error** halves vs the TSO forecast (1.02 vs 2.14 GW in 2019).
+* **Intervals.** Raw quantile LightGBM intervals were badly over-confident (44 % coverage for a nominal
+  80 %); online conformal calibration fixes this (≈79–81 %).
+* **Caveats.** Weather-forecast errors are simulated; the target series has documented coverage drift;
+  OPSD ends in Sep 2020. See `reports/REPORT.md`."""),
 ]
-nb = nbf.v4.new_notebook(cells=cells, metadata={
-    "kernelspec": {"name": "energy-demand-forecasting", "display_name": "Python (energy-demand-forecasting)", "language": "python"}
-})
+nb = nbf.v4.new_notebook(
+    cells=cells,
+    metadata={
+        "kernelspec": {
+            "name": "energy-demand-forecasting",
+            "display_name": "Python (energy-demand-forecasting)",
+            "language": "python",
+        }
+    },
+)
 nbf.write(nb, "notebooks/03_end_to_end.ipynb")
 print("wrote notebooks/03_end_to_end.ipynb")

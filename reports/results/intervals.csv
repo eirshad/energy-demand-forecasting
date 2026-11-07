@@ -1,0 +1,13 @@
+period,weather,method,coverage_%,mean_width_MW,pinball_q10,pinball_q90
+test_2019,actual,quantile_lgbm,43.69,1605.49,312.64,299.62
+test_2019,actual,cqr,79.36,3294.48,248.19,217.02
+test_2019,actual,conformal_point,78.37,2939.9,229.94,204.05
+test_2019,noisy,quantile_lgbm,43.6,1657.41,327.97,308.0
+test_2019,noisy,cqr,79.61,3408.61,257.84,222.37
+test_2019,noisy,conformal_point,79.16,3174.44,241.98,210.38
+stress_2020,actual,quantile_lgbm,45.35,1627.46,335.73,307.95
+stress_2020,actual,cqr,80.78,3585.25,265.37,251.28
+stress_2020,actual,conformal_point,79.09,3204.47,246.89,242.56
+stress_2020,noisy,quantile_lgbm,44.45,1657.91,361.92,317.69
+stress_2020,noisy,cqr,80.72,3747.47,277.14,263.18
+stress_2020,noisy,conformal_point,79.53,3421.67,260.96,255.07

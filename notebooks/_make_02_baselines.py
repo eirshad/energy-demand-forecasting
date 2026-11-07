@@ -41,7 +41,14 @@ for c in ["snaive_week", "tso_dayahead"]:
 ax.set(title="Christmas 2019: seasonal naive vs TSO forecast", ylabel="GW"); ax.legend()
 fig.savefig(PROJECT_ROOT / "reports" / "figures" / "09_baselines_christmas.png", bbox_inches="tight")"""),
 ]
-nb = nbf.v4.new_notebook(cells=cells, metadata={
-    "kernelspec": {"name": "energy-demand-forecasting", "display_name": "Python (energy-demand-forecasting)", "language": "python"}
-})
+nb = nbf.v4.new_notebook(
+    cells=cells,
+    metadata={
+        "kernelspec": {
+            "name": "energy-demand-forecasting",
+            "display_name": "Python (energy-demand-forecasting)",
+            "language": "python",
+        }
+    },
+)
 nbf.write(nb, "notebooks/02_baselines.ipynb")

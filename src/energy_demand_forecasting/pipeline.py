@@ -26,6 +26,8 @@ from energy_demand_forecasting.baselines import (
 from energy_demand_forecasting.data import PROJECT_ROOT
 from energy_demand_forecasting.evaluation import (
     PERIODS,
+    conformal_from_point,
+    conformalize_quantiles,
     daily_peak_mae,
     diebold_mariano,
     evaluate,
@@ -132,6 +134,7 @@ def run(tune: bool = False, n_trials: int = 20) -> pd.DataFrame:
     preds = bench.join(preds)
     preds.insert(0, "actual", y.loc[preds.index])
     PRED_PATH.parent.mkdir(parents=True, exist_ok=True)
+    preds = add_conformal_intervals(preds)
     preds.to_parquet(PRED_PATH)
     _log(f"predictions saved: {preds.shape}", t0)
 
@@ -168,25 +171,62 @@ def save_metrics(preds: pd.DataFrame) -> None:
     pd.DataFrame(dm_rows).round(4).to_csv(RESULTS / "dm_tests.csv", index=False)
 
     iv_rows = []
+    methods = {
+        "quantile_lgbm": ("q10__{v}", "q90__{v}"),
+        "cqr": ("q_cqr_lo__{v}", "q_cqr_hi__{v}"),
+        "conformal_point": ("q_cp_lo__{v}", "q_cp_hi__{v}"),
+    }
     for period, (s, e) in PERIODS.items():
         for v in ["actual", "noisy"]:
-            lo, hi = preds[f"q10__{v}"].loc[s:e], preds[f"q90__{v}"].loc[s:e]
-            ys = y.loc[s:e]
-            iv_rows.append(
-                {
-                    "period": period,
-                    "weather": v,
-                    **interval_metrics(ys, lo, hi),
-                    "pinball_q10": pinball_loss(ys, lo, 0.1),
-                    "pinball_q90": pinball_loss(ys, hi, 0.9),
-                }
-            )
+            for method, (lo_c, hi_c) in methods.items():
+                lo = preds[lo_c.format(v=v)].loc[s:e]
+                hi = preds[hi_c.format(v=v)].loc[s:e]
+                ys = y.loc[s:e]
+                iv_rows.append(
+                    {
+                        "period": period,
+                        "weather": v,
+                        "method": method,
+                        **interval_metrics(ys, lo, hi),
+                        "pinball_q10": pinball_loss(ys, lo, 0.1),
+                        "pinball_q90": pinball_loss(ys, hi, 0.9),
+                    }
+                )
     pd.DataFrame(iv_rows).round(2).to_csv(RESULTS / "intervals.csv", index=False)
+
+
+def add_conformal_intervals(preds: pd.DataFrame) -> pd.DataFrame:
+    """Calibrated 80 % intervals: CQR on the quantile models, and conformal around the ensemble.
+
+    Calibration uses only out-of-sample errors from earlier forecasts, so the first week of the
+    test period has no interval (NaN) and is excluded from interval metrics.
+    """
+    y = preds["actual"]
+    out = preds.copy()
+    for v in ["actual", "noisy"]:
+        lo, hi = conformalize_quantiles(y, preds[f"q10__{v}"], preds[f"q90__{v}"])
+        out[f"q_cqr_lo__{v}"], out[f"q_cqr_hi__{v}"] = lo, hi
+        lo, hi = conformal_from_point(y, preds[f"ensemble__{v}"])
+        out[f"q_cp_lo__{v}"], out[f"q_cp_hi__{v}"] = lo, hi
+    return out
+
+
+def recompute_metrics() -> None:
+    """Re-derive calibrated intervals and all metrics from saved predictions (seconds)."""
+    preds = pd.read_parquet(PRED_PATH)
+    preds = add_conformal_intervals(preds[[c for c in preds if not c.startswith("q_")]])
+    preds.to_parquet(PRED_PATH)
+    save_metrics(preds)
 
 
 def main() -> None:
     ap = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    ap.add_argument(
+        "--metrics-only",
+        action="store_true",
+        help="only recompute intervals/metrics from saved predictions",
     )
     ap.add_argument(
         "--tune", action="store_true", help="re-run hyperparameter tuning on 2018"
@@ -195,6 +235,9 @@ def main() -> None:
         "--trials", type=int, default=20, help="Optuna trials per LightGBM model"
     )
     args = ap.parse_args()
+    if args.metrics_only:
+        recompute_metrics()
+        return
     run(tune=args.tune, n_trials=args.trials)
 
 

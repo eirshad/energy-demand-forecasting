@@ -85,6 +85,39 @@ def pinball_loss(y: pd.Series, q_pred: pd.Series, q: float) -> float:
     return float(np.mean(np.maximum(q * e, (q - 1) * e)))
 
 
+def conformalize_quantiles(
+    y: pd.Series,
+    lo: pd.Series,
+    hi: pd.Series,
+    coverage: float = 0.8,
+    window_days: int = 56,
+    lag_h: int = 48,
+) -> tuple[pd.Series, pd.Series]:
+    """Online conformalised quantile regression (CQR) with a rolling calibration window.
+
+    Conformity score s_t = max(lo_t - y_t, y_t - hi_t). The interval is widened (or narrowed)
+    by the `coverage` quantile of the scores from the last `window_days`, lagged `lag_h` hours
+    so that only errors known at issue time (lag >= 40 h) are used.
+    """
+    s = np.maximum(lo - y, y - hi).shift(lag_h)
+    q = s.rolling(window_days * 24, min_periods=7 * 24).quantile(coverage)
+    return lo - q, hi + q
+
+
+def conformal_from_point(
+    y: pd.Series,
+    point: pd.Series,
+    coverage: float = 0.8,
+    window_days: int = 56,
+    lag_h: int = 48,
+) -> tuple[pd.Series, pd.Series]:
+    """Interval = point forecast + rolling empirical quantiles of its past errors (issue-time safe)."""
+    a = (1 - coverage) / 2
+    e = (y - point).shift(lag_h)
+    roll = e.rolling(window_days * 24, min_periods=7 * 24)
+    return point + roll.quantile(a), point + roll.quantile(1 - a)
+
+
 def interval_metrics(y: pd.Series, lo: pd.Series, hi: pd.Series) -> dict[str, float]:
     mask = y.notna() & lo.notna() & hi.notna()
     inside = (y[mask] >= lo[mask]) & (y[mask] <= hi[mask])

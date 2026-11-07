@@ -1,12 +1,14 @@
-# Progress log (overnight run, 2026-11-07)
+# Progress log
 
-Resume point if the session stopped early: see the last checked item.
+- [x] Setup, data download, EDA (01), baselines (02)
+- [x] Data check vs official statistics
+- [x] Leakage-safe features, models, backtest, tuning, pipeline
+- [x] Tuning on 2018 (`reports/results/best_params.json`, log in `tuning_log.txt`)
+- [x] Full backtest (11 runs) → `data/processed/predictions.parquet`, `reports/results/*.csv`
+- [x] Conformal calibration of intervals (raw quantile intervals covered only 44 %)
+- [x] End-to-end notebook `notebooks/03_end_to_end.ipynb` executed
+- [x] `reports/REPORT.md`, README
+- [x] 15 tests passing, lint clean
 
-- [x] Setup, data download, EDA (01), baselines (02) — commit 1b0a786
-- [x] Data check vs official statistics → `reports/results/data_check_annual.csv`
-- [x] Leakage-safe features, models, backtest, tuning, pipeline — commit d30174f
-- [x] Tests (14 passing)
-- [ ] Full pipeline run: `uv run run-backtest --tune` → `reports/results/`
-- [ ] End-to-end notebook `notebooks/03_end_to_end.ipynb` executed
-- [ ] `reports/REPORT.md` written, README updated
-- [ ] Final lint/tests/commit
+Run notes: the first overnight run stalled because the Mac slept on battery / with the lid
+closed; the backtest was re-run detached under `caffeinate`. Future runs: see report §8.5.
