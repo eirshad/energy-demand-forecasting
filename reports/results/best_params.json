@@ -1,0 +1,28 @@
+{
+  "ridge": {
+    "alpha": 0.1,
+    "val_MAE": 1277.9633630221158
+  },
+  "lgbm_raw": {
+    "n_estimators": 1500,
+    "learning_rate": 0.029851439878394233,
+    "num_leaves": 156,
+    "min_child_samples": 188,
+    "subsample": 0.8974134787962635,
+    "colsample_bytree": 0.5044404356193708,
+    "reg_lambda": 1.242288345105642,
+    "val_MAE": 980.6051626471315,
+    "n_trials": 20
+  },
+  "lgbm_norm": {
+    "n_estimators": 1500,
+    "learning_rate": 0.03930666278116316,
+    "num_leaves": 182,
+    "min_child_samples": 187,
+    "subsample": 0.904590143301484,
+    "colsample_bytree": 0.5436728983130733,
+    "reg_lambda": 0.13353317655810815,
+    "val_MAE": 988.3411170892763,
+    "n_trials": 20
+  }
+}
